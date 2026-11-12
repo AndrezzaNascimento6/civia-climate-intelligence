@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import ExposureDashboard from "@/components/ExposureDashboard";
 import {
   Activity, ArrowDownRight, ArrowRight, ArrowUpRight, Check, ChevronDown,
   ChevronLeft, ChevronRight, Cloud, CloudFog, CloudLightning, CloudRain,
@@ -22,9 +23,9 @@ type Metric = "temperature" | "airQuality" | "rainChance";
 
 const NAVIGATION = [
   { id: "today" as View, label: "Overview", icon: House },
-  { id: "forecast" as View, label: "Explore", icon: Compass },
+  { id: "forecast" as View, label: "Exposure", icon: Compass },
   { id: "insights" as View, label: "Insights", icon: Sparkles },
-  { id: "preferences" as View, label: "Preferences", icon: SlidersHorizontal }
+  { id: "preferences" as View, label: "Settings", icon: SlidersHorizontal }
 ];
 
 function WeatherIcon({ code, size = 26 }: { code: number; size?: number }) {
@@ -271,83 +272,13 @@ export default function CiviaApp() {
   );
 
   function renderToday(data: ClimateSnapshot) {
-    const message = data.aqi !== null && data.aqi > 100 ? "A day for mindful choices." :
-      data.rainChance !== null && data.rainChance >= 50 ? "A little planning goes a long way." :
-      "The bigger picture, at a glance.";
-    const circle = data.aqi === null ? 0 : Math.min(360, Math.max(0, data.aqi / 200 * 360));
-    return <>
-      <SurfaceTitle eyebrow="YOUR DAILY OUTLOOK" title={<>Your city, <em>in focus.</em></>} description="Less noise. More meaning. Know what the environment is telling you today."/>
-      <div className="overview-layout">
-        <section className="hero-weather" aria-label="Current weather overview">
-          <div className="hero-orbit hero-orbit--one" aria-hidden="true"/>
-          <div className="hero-orbit hero-orbit--two" aria-hidden="true"/>
-          <div className="hero-glow" aria-hidden="true"/>
-          <div className="hero-topline">
-            <span><i/> YOUR ATMOSPHERE</span>
-            <span>{data.city.name.toUpperCase()}</span>
-          </div>
-          <div className="hero-weather-content">
-            <div className="hero-weather-copy">
-              <div className="hero-weather-condition"><WeatherIcon code={data.weatherCode} size={24}/>{weatherLabel(data.weatherCode)}</div>
-              <div className="hero-temp">{Math.round(data.temperature)}<span>°</span></div>
-              <p>{message}</p>
-            </div>
-          </div>
-          <div className="hero-weather-bottom">
-            <div><span>FEELS LIKE</span><strong>{Math.round(data.feelsLike)}°C</strong></div>
-            <div><span>HUMIDITY</span><strong>{Math.round(data.humidity)}%</strong></div>
-            <div><span>WIND</span><strong>{Math.round(data.wind)} km/h</strong></div>
-          </div>
-        </section>
-        <section className="air-card surface" aria-label="Air quality">
-          <div className="surface-topline"><span>01 / AIR QUALITY</span><Activity size={20} strokeWidth={1.5} aria-hidden="true"/></div>
-          <div className="air-card-gauge" style={{ "--aqi-angle": circle + "deg" } as React.CSSProperties}>
-            <div className="air-card-gauge-inner">
-              <span>US AQI</span>
-              <strong>{data.aqi === null ? "—" : Math.round(data.aqi)}</strong>
-            </div>
-          </div>
-          <div className={"aqi-category aqi-category--" + category.tone}><span/>{category.label}</div>
-          <p className="air-card-caption">{data.aqi === null ? "Air-quality information is temporarily unavailable." : "A model-based snapshot of air quality around your selected area."}</p>
-          <button type="button" className="text-link" onClick={() => { setMetric("airQuality"); setView("forecast"); }}>Explore air quality <ArrowUpRight size={16}/></button>
-        </section>
-      </div>
-      <div className="section-heading section-heading--cards">
-        <div><span className="section-kicker">CONTEXT, NOT COMPLEXITY</span><h2>What matters <em>right now.</em></h2></div>
-        <span className="section-aside">03 SIGNALS / ONE CLEARER DAY</span>
-      </div>
-      <div className="signal-grid">
-        <article className="signal-card surface">
-          <div className="signal-card-top"><span>02 / UV EXPOSURE</span><Sun size={21} strokeWidth={1.5}/></div>
-          <div className="signal-card-value">{data.uv === null ? "—" : Math.round(data.uv)}<span>{data.uv === null ? "Unavailable" : data.uv >= 6 ? "High" : data.uv >= 3 ? "Moderate" : "Low"}</span></div>
-          <div className="signal-card-scale"><i/></div><p>UV levels can change independently of temperature.</p>
-        </article>
-        <article className="signal-card surface">
-          <div className="signal-card-top"><span>03 / RAIN CHANCE</span><Droplets size={21} strokeWidth={1.5}/></div>
-          <div className="signal-card-value">{data.rainChance === null ? "—" : Math.round(data.rainChance) + "%"}<span>Next forecast hour</span></div>
-          <div className="signal-card-scale signal-card-scale--rain"><i style={{ width: Math.max(4, data.rainChance ?? 0) + "%" }}/></div><p>A probability for the hour, not a promise.</p>
-        </article>
-        <article className="signal-card signal-card--cta">
-          <div className="signal-card-top"><span>04 / LOOK AHEAD</span><ArrowUpRight size={21} strokeWidth={1.5}/></div>
-          <h3>The next few hours, made simple.</h3>
-          <button type="button" onClick={() => setView("forecast")}>Explore the forecast <ArrowRight size={19}/></button>
-        </article>
-      </div>
-      <div className="section-heading section-heading--insights">
-        <div><span className="section-kicker">PERSONALIZED, NOT PRESCRIPTIVE</span><h2>A thought for <em>your day.</em></h2></div>
-      </div>
-      {mainInsight && <section className="feature-insight">
-        <div className="feature-insight-visual" aria-hidden="true"><span className="feature-insight-sun"/><span className="feature-insight-arch"/><Sparkles size={27}/></div>
-        <div className="feature-insight-content">
-          <span className="feature-insight-eyebrow"><Sparkles size={13}/> CIVIA GUIDANCE · {mainInsight.category}</span>
-          <h3>{mainInsight.title}</h3>
-          <p>{mainInsight.summary}</p>
-          <button type="button" onClick={() => { setExpandedInsight(mainInsight.id); setView("insights"); }}>See what informed this <ArrowUpRight size={18}/></button>
-        </div>
-      </section>}
-      <div className="trust-strip"><ShieldCheck size={19} aria-hidden="true"/><p>Designed for trust. See the data, understand the logic, and decide for yourself.</p><button type="button" onClick={() => setShowMethodology(value => !value)} aria-expanded={showMethodology}>How it works <ChevronDown size={16}/></button></div>
-      {showMethodology && renderMethodology(data)}
-    </>;
+    return <ExposureDashboard
+      data={data}
+      priorities={priorities}
+      onExplore={()=>{setMetric("airQuality");setView("forecast");window.scrollTo({top:0,behavior:"smooth"});}}
+      onInsights={()=>{setExpandedInsight("air");setView("insights");window.scrollTo({top:0,behavior:"smooth"});}}
+      onPreferences={()=>{setView("preferences");window.scrollTo({top:0,behavior:"smooth"});}}
+    />;
   }
 
   function renderMethodology(data: ClimateSnapshot) {
@@ -472,6 +403,7 @@ export default function CiviaApp() {
     <div className="content-shell">
       <header className="topbar">
         <div className="mobile-brand"><Mark compact/></div>
+        <div className="desktop-app-navigation">{renderNavigation()}</div>
         <div className="topbar-context"><span className="topbar-context-mark"/> A CALMER WAY TO UNDERSTAND THE WORLD</div>
         <div className="topbar-actions">
           {snapshot && <StatusPill snapshot={snapshot}/>}
@@ -493,8 +425,8 @@ export default function CiviaApp() {
           </div>
         </div>
       </header>
-      <main id="main-content" className="main-content">
-        {view !== "preferences" && <div className="content-status">
+      <main id="main-content" className={"main-content"+(view==="today"?" main-content--exposure":"")}>
+        {view !== "preferences" && view !== "today" && <div className="content-status">
           <span>THE CITY IS ALWAYS CHANGING</span>
           <span>{snapshot?.source === "sample" ? "DEMO MODE / FICTIONAL VALUES" : "MODEL FORECAST / NOT STREET-LEVEL MEASUREMENT"}</span>
         </div>}
