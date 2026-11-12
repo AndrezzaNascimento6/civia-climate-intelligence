@@ -36,6 +36,8 @@ export type ClimateSnapshot = {
   aqi: number | null;
   pm25: number | null;
   pm10: number | null;
+  ozone: number | null;
+  nitrogenDioxide: number | null;
   uv: number | null;
   rainChance: number | null;
   hourly: ClimateHour[];
@@ -80,7 +82,7 @@ type WeatherResponse = {
 };
 
 type AirResponse = {
-  current?: { us_aqi?: number; pm2_5?: number; pm10?: number };
+  current?: { us_aqi?: number; pm2_5?: number; pm10?: number; ozone?: number; nitrogen_dioxide?: number };
   hourly?: { time?: string[]; us_aqi?: number[] };
 };
 
@@ -106,7 +108,7 @@ export async function loadClimate(city: City, signal?: AbortSignal): Promise<Cli
     "&daily=temperature_2m_max,temperature_2m_min,weather_code" +
     "&forecast_days=4&timezone=auto";
   const airUrl = "https://air-quality-api.open-meteo.com/v1/air-quality?" + coords +
-    "&current=us_aqi,pm2_5,pm10&hourly=us_aqi&forecast_days=4&timezone=auto";
+    "&current=us_aqi,pm2_5,pm10,ozone,nitrogen_dioxide&hourly=us_aqi&forecast_days=4&timezone=auto";
 
   const [weatherResult, airResult] = await Promise.allSettled([
     getJson<WeatherResponse>(weatherUrl, signal),
@@ -156,6 +158,8 @@ export async function loadClimate(city: City, signal?: AbortSignal): Promise<Cli
     aqi: numeric(air?.current?.us_aqi),
     pm25: numeric(air?.current?.pm2_5),
     pm10: numeric(air?.current?.pm10),
+    ozone: numeric(air?.current?.ozone),
+    nitrogenDioxide: numeric(air?.current?.nitrogen_dioxide),
     uv: hours[0]?.uv ?? null,
     rainChance: hours[0]?.rainChance ?? null,
     hourly: hours,
@@ -184,7 +188,7 @@ export function createSample(city: City): ClimateSnapshot {
   return {
     city, source: "sample", updatedAt: base.toISOString(), timezone: "Demo time",
     temperature: 24, feelsLike: 26, humidity: 63, wind: 12,
-    weatherCode: 2, isDay: true, aqi: 44, pm25: 9.8, pm10: 18.2, uv: 5,
+    weatherCode: 2, isDay: true, aqi: 44, pm25: 9.8, pm10: 18.2, ozone: 42.7, nitrogenDioxide: 17.3, uv: 5,
     rainChance: 25, hourly, daily
   };
 }
