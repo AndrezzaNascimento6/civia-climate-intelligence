@@ -463,3 +463,6 @@ button{min-height:44px}
 @media(prefers-reduced-motion:reduce){
   .breathe-bar,.breathe-journey-items button,.breathe-hero-button{transition:none!important}
 }
+
+/* Mobile hero reading order: headline → AQI → explanation → action. */
+@media(max-width:600px){.breathe-hero-body .breathe-status{order:1}.breathe-hero-body h2{order:2}.breathe-hero-body .breathe-aqi-dial{order:3}.breathe-hero-body p{order:4}.breathe-hero-body .breathe-hero-button{order:5}}

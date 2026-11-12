@@ -62,6 +62,24 @@ export default function ProcessPage() {
         </div>
       </section>
 
+      <section className="process-benchmark" id="benchmark">
+        <div className="process-benchmark-heading">
+          <span>COMPETITIVE BENCHMARK / SECONDARY RESEARCH</span>
+          <h2>Less dashboard. <em>More everyday clarity.</em></h2>
+          <p>A review of existing air-quality and weather experiences helped establish the direction for CIVIA's consumer-first interface. These are product observations and design hypotheses, not findings from user tests.</p>
+        </div>
+        <div className="process-benchmark-grid">
+          <article><span>01 / IQAIR AIRVISUAL</span><h3>One clear signal first.</h3><p>Lead with a location-aware AQI reading, severity label, forecast and pollutant details. Don't require someone to understand chemistry before they can interpret their day.</p><a href="https://www.iqair.com/air-quality-monitors/air-quality-app" target="_blank" rel="noreferrer">View source <ArrowUpRight size={15}/></a></article>
+          <article><span>02 / AIRNOW (US EPA)</span><h3>Color must mean something.</h3><p>Use standard US AQI categories and plain-language status text together. Color supports interpretation, rather than replacing it.</p><a href="https://www.airnow.gov/airnow-mobile-app/" target="_blank" rel="noreferrer">View source <ArrowUpRight size={15}/></a></article>
+          <article><span>03 / PLUME LABS</span><h3>Timing changes decisions.</h3><p>A simple hourly forecast turns a static measurement into a way to plan a walk, commute or outdoor activity.</p><a href="https://apps.apple.com/us/app/plume-labs-air-quality-app/id950289243" target="_blank" rel="noreferrer">View source <ArrowUpRight size={15}/></a></article>
+          <article><span>04 / APPLE WEATHER</span><h3>Depth on demand.</h3><p>Keep the high-level view calm and let people explore extra layers when needed. More detail should be one clear interaction away.</p><a href="https://support.apple.com/en-lamr/guide/iphone/iph1ac0b35f/27/ios/27" target="_blank" rel="noreferrer">View source <ArrowUpRight size={15}/></a></article>
+        </div>
+        <div className="process-benchmark-decision">
+          <span>DESIGN DECISION</span>
+          <p>I moved away from a dark, cloud-dashboard aesthetic and toward <strong>a warmer, legible consumer experience</strong>: a single dominant AQI story, readable supporting cards, practical trends and explicit model limitations.</p>
+        </div>
+      </section>
+
       <section className="process-section" id="journey">
         <div className="process-section-index">02 / EXPERIENCE STRATEGY</div>
         <div className="process-section-main">

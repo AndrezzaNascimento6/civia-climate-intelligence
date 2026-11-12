@@ -72,6 +72,7 @@ export default function ExposureDashboard({ data, priorities, onExplore, onInsig
   const localTime=data.updatedAt.includes("T") ? data.updatedAt.split("T")[1]?.slice(0,5) : null;
   const category=aqiCategory(data.aqi);
   const indicatorStyle=({"--breathe-indicator":(selected ?? 0)+"%"} as CSSProperties);
+  const dialStyle=({"--breathe-dial":Math.min(100,Math.max(0,(data.aqi ?? 0)/200*100))+"%"} as CSSProperties);
   const count=[data.pm25,data.pm10,data.ozone,data.nitrogenDioxide].filter(x=>x!==null).length;
   return <div className="breathe-app">
     <header className="breathe-welcome">
@@ -86,7 +87,7 @@ export default function ExposureDashboard({ data, priorities, onExplore, onInsig
       </div>
     </header>
 
-    <section className={"breathe-hero breathe-hero--"+air.tone} aria-label="Current air-quality overview">
+    <section className={"breathe-hero breathe-hero--"+air.tone} aria-label="Current air-quality overview" style={dialStyle}>
       <div className="breathe-hero-orbit breathe-hero-orbit--large" aria-hidden="true"/>
       <div className="breathe-hero-orbit breathe-hero-orbit--small" aria-hidden="true"/>
       <div className="breathe-hero-top">

@@ -22,7 +22,7 @@ type View = "today" | "forecast" | "insights" | "preferences";
 type Metric = "temperature" | "airQuality" | "rainChance";
 
 const NAVIGATION = [
-  { id: "today" as View, label: "Overview", icon: House },
+  { id: "today" as View, label: "Today", icon: House },
   { id: "forecast" as View, label: "Exposure", icon: Compass },
   { id: "insights" as View, label: "Insights", icon: Sparkles },
   { id: "preferences" as View, label: "Settings", icon: SlidersHorizontal }

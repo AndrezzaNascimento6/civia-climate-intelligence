@@ -134,3 +134,20 @@
   .process-footer{padding:25px 21px}
 }
 @media(prefers-reduced-motion:reduce){.process-hero-cta{transition:none}}
+
+/* Competitive benchmark — transparent secondary research and design synthesis. */
+.process-benchmark{padding:clamp(76px,9vw,132px) clamp(23px,6vw,110px);border-bottom:1px solid #e4e0d8;background:#faf6ef}
+.process-benchmark-heading{max-width:1020px}
+.process-benchmark-heading>span,.process-benchmark-grid article>span,.process-benchmark-decision>span{font-size:11px;color:#bd7e68;letter-spacing:.11em;font-weight:800}
+.process-benchmark h2{font:600 clamp(47px,6vw,89px)/1.02 var(--serif);letter-spacing:-.04em;margin:22px 0;color:#294a3f}
+.process-benchmark h2 em{font-style:normal;color:#e08b72}
+.process-benchmark-heading>p{font:500 16px/1.8 var(--sans);color:#65796c;max-width:760px}
+.process-benchmark-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:35px}
+.process-benchmark-grid article{border:1px solid #e6e0d7;border-radius:18px;background:white;padding:clamp(23px,3vw,36px);min-width:0}
+.process-benchmark-grid h3{font:600 clamp(25px,2.7vw,37px)/1.15 var(--serif);color:#284b3c;margin:20px 0 15px}
+.process-benchmark-grid p{font:500 14px/1.8 var(--sans);color:#74867a;min-height:85px}
+.process-benchmark-grid a{font:800 12px var(--sans);color:#467a66;display:inline-flex;align-items:center;gap:8px;min-height:44px}
+.process-benchmark-decision{margin-top:17px;background:#f6e5d9;border-radius:17px;padding:clamp(25px,3.7vw,44px)}
+.process-benchmark-decision p{font:500 clamp(21px,2.5vw,32px)/1.48 var(--serif);margin:17px 0 0;color:#725349;max-width:1000px}
+.process-benchmark-decision strong{color:#b96d55}
+@media(max-width:700px){.process-benchmark{padding:63px 21px}.process-benchmark-grid{grid-template-columns:1fr}.process-benchmark-grid p{min-height:auto}.process-benchmark h2{font-size:49px}}
