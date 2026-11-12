@@ -1,10 +1,7 @@
-import {
-  Activity, ArrowRight, ArrowUpRight, CloudSun, Droplets, Eye,
-  Leaf, MapPin, ShieldCheck, Sparkles, Wind
-} from "lucide-react";
-import { aqiCategory, formatHour, type ClimateSnapshot } from "@/lib/climate";
-import { deriveInsights, type Priorities } from "@/lib/insights";
+import { ArrowRight, ArrowUpRight, CheckCircle2, Droplets, Heart, Info, Leaf, MapPin, SlidersHorizontal, Sparkles, Sun, Wind } from "lucide-react";
 import type { CSSProperties } from "react";
+import { aqiCategory, formatHour, weatherLabel, type ClimateSnapshot } from "@/lib/climate";
+import { deriveInsights, type Priorities } from "@/lib/insights";
 
 type Props = {
   data: ClimateSnapshot;
@@ -14,225 +11,158 @@ type Props = {
   onPreferences: () => void;
 };
 
-function Pollutant({
-  symbol, name, value
-}: {
-  symbol: string; name: string; value: number | null
-}) {
-  return <div className="air-pollutant">
-    <span className="air-pollutant-symbol">{symbol}</span>
-    <div className="air-pollutant-reading">
-      <strong>{value === null ? "—" : Math.round(value)}</strong>
-      <span>{value === null ? "" : "µg/m³"}</span>
-    </div>
-    <small>{name}</small>
-    <i aria-hidden="true"/>
+type Tone = "good" | "moderate" | "sensitive" | "unhealthy" | "very-unhealthy" | "hazardous" | "unknown";
+function describeAir(value: number | null): { tone: Tone; label: string; headline: string; subheading: string } {
+  if (value === null) return { tone: "unknown", label: "Not available", headline: "Stay curious about your city.", subheading: "The air-quality estimate is unavailable right now. Other weather information may still be ready." };
+  if (value <= 50) return { tone: "good", label: "Good", headline: "A little more room to breathe.", subheading: "Air quality is in the good range today. Check the forecast before your next outdoor plan." };
+  if (value <= 100) return { tone: "moderate", label: "Moderate", headline: "A mindful day ahead.", subheading: "Air quality is moderate. Especially sensitive people may want to check the next hours." };
+  if (value <= 150) return { tone: "sensitive", label: "Unhealthy for sensitive groups", headline: "Choose a gentler moment.", subheading: "Air quality is elevated for sensitive groups. Look for a better time for demanding outdoor activities." };
+  if (value <= 200) return { tone: "unhealthy", label: "Unhealthy", headline: "Take care of your breathing space.", subheading: "Air quality is unhealthy. Consider reducing prolonged outdoor exertion and checking official local guidance." };
+  if (value <= 300) return { tone: "very-unhealthy", label: "Very unhealthy", headline: "Today calls for extra care.", subheading: "Air quality is very unhealthy. Check official advice for your area before outdoor activities." };
+  return { tone: "hazardous", label: "Hazardous", headline: "Put your wellbeing first.", subheading: "Hazardous air-quality estimates deserve attention. Follow official local air-quality advice." };
+}
+
+const AQI_LEGEND = [
+  ["0–50", "Good", "good"],
+  ["51–100", "Moderate", "moderate"],
+  ["101–150", "Sensitive", "sensitive"],
+  ["151–200", "Unhealthy", "unhealthy"],
+  ["201–300", "Very unhealthy", "very-unhealthy"],
+  ["301+", "Hazardous", "hazardous"]
+] as const;
+
+function Pollutant({ short, name, value }: { short: string; name: string; value: number | null }) {
+  return <div className="breathe-pollutant">
+    <div className="breathe-pollutant-heading"><span className="breathe-chemical">{short}</span><span className="breathe-pollutant-unit">µg/m³</span></div>
+    <strong>{value === null ? "—" : Math.round(value)}</strong>
+    <span className="breathe-pollutant-name">{name}</span>
   </div>;
 }
 
-function AQISparkline({ data }: { data: ClimateSnapshot }) {
-  const values = data.hourly.slice(0, 13).map(hour => hour.airQuality);
-  const available = values.filter((value): value is number => value !== null);
-  if (available.length < 2) return <span className="air-sparkline-empty">Hourly trend unavailable</span>;
-  const min = Math.min(...available);
-  const max = Math.max(...available);
-  const range = Math.max(12, max - min);
-  const points = values.map((value, index) => value === null ? null : {
-    x: 3 + (index / (values.length - 1)) * 194,
-    y: 43 - ((value - min) / range) * 31
-  });
-  const polyline = points.filter((point): point is { x: number; y: number } => point !== null)
-    .map(point => point.x.toFixed(1) + "," + point.y.toFixed(1)).join(" ");
-  return <svg className="air-sparkline" viewBox="0 0 200 51" role="img" aria-label={"Forecast AQI trend: " + Math.round(min) + " to " + Math.round(max) + " US AQI."}>
-    <line x1="0" x2="200" y1="43" y2="43" stroke="currentColor" strokeOpacity=".18" strokeDasharray="2 5"/>
-    <polyline points={polyline} fill="none" stroke="#9beb91" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
-    {points[0] && <circle cx={points[0].x} cy={points[0].y} r="3.5" fill="#d7f1d0"/>}
-  </svg>;
-}
-
-function ForestOrb({ variant }: { variant: "forest" | "smoke" }) {
-  return <div className={"air-scenic-orb air-scenic-orb--" + variant} aria-hidden="true">
-    <svg viewBox="0 0 280 280" preserveAspectRatio="xMidYMid slice">
-      <defs>
-        <linearGradient id={"air-sky-"+variant} x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0" stopColor={variant === "forest" ? "#859e93" : "#798281"}/>
-          <stop offset="1" stopColor={variant === "forest" ? "#263f3a" : "#202c2a"}/>
-        </linearGradient>
-      </defs>
-      <rect width="280" height="280" fill={"url(#air-sky-"+variant+")"}/>
-      {variant === "forest" ? <>
-        <path d="M0 145 55 95 104 136 154 75 218 139 280 98 280 280H0Z" fill="#56766a"/>
-        <path d="M0 170 65 118 128 164 196 102 280 158v122H0Z" fill="#345b4b"/>
-        {Array.from({length:13},(_,i)=> {
-          const x=i*26-16, height=75+(i*29)%75;
-          return <g key={i} opacity={.6+(i%3)*.1}>
-            <path d={"M"+x+" 270v-"+(height+4)} stroke="#142f29" strokeWidth="5"/>
-            <path d={"M"+(x-26)+" "+(260-height/2)+" "+x+" "+(200-height)+" "+(x+26)+" "+(260-height/2)+"Z"} fill="#173d32"/>
-            <path d={"M"+(x-20)+" "+(240-height/2)+" "+x+" "+(180-height)+" "+(x+20)+" "+(240-height/2)+"Z"} fill="#1b4236"/>
-          </g>;
+function HourlyTrend({ data, onExplore }: { data: ClimateSnapshot; onExplore: () => void }) {
+  const hours = data.hourly.slice(0, 12);
+  const known = hours.filter(hour => hour.airQuality !== null);
+  const max = Math.max(110, ...known.map(hour => hour.airQuality ?? 0));
+  return <section className="breathe-card breathe-trend">
+    <div className="breathe-card-heading">
+      <div><span className="breathe-overline">THE NEXT HOURS</span><h2>How the air could <em>change.</em></h2></div>
+      <button type="button" className="breathe-icon-button" onClick={onExplore} aria-label="Explore detailed hourly forecast"><ArrowUpRight size={23}/></button>
+    </div>
+    {known.length < 2 ? <p className="breathe-trend-empty">Hourly air-quality forecasts aren't available for this location.</p> :
+      <div className="breathe-bars" role="img" aria-label={"Twelve-hour US AQI forecast. " + hours.map(hour => formatHour(hour.time)+": "+(hour.airQuality ?? "unavailable")).join("; ")}>
+        {hours.map((hour,index) => {
+          const n=hour.airQuality;
+          const height=n === null ? 6 : Math.max(16, (n/max)*100);
+          const category = describeAir(n);
+          return <div className="breathe-bar-column" key={hour.time}>
+            <span className="breathe-bar-value">{index % 3 === 0 && n !== null ? Math.round(n) : ""}</span>
+            <span className={"breathe-bar breathe-bar--"+category.tone} style={{height:height+"%"}}/>
+            <span className="breathe-bar-hour">{index % 3 === 0 || index === hours.length-1 ? formatHour(hour.time).replace(" ","") : ""}</span>
+          </div>;
         })}
-        <path d="M0 187q88-34 149 13t131-8" stroke="#c7d7ce" strokeWidth="16" opacity=".2" fill="none"/>
-      </> : <>
-        <path d="M0 234 79 207 155 216 222 193 280 207v73H0Z" fill="#1e2a29"/>
-        <rect x="68" y="124" width="21" height="117" fill="#222828"/>
-        <rect x="185" y="152" width="29" height="92" fill="#28312e"/>
-        <path d="M80 125q-36-36-1-54 22-10 5-32 43 17 26 56t-30 30Z" fill="#e0e1d8" opacity=".35"/>
-        <path d="M201 152q-42-47-12-69 28-22 2-49 65 34 35 83t-25 35Z" fill="#e1e0d5" opacity=".28"/>
-      </>}
-    </svg>
-  </div>;
+      </div>}
+    <div className="breathe-chart-footer"><span><span className="breathe-live-dot"/> US AQI forecast · Model estimates</span><button type="button" onClick={onExplore}>See full forecast <ArrowRight size={17}/></button></div>
+  </section>;
 }
 
-export default function ExposureDashboard({
-  data, priorities, onExplore, onInsights, onPreferences
-}: Props) {
-  const category = aqiCategory(data.aqi);
-  const aqi = data.aqi;
-  const value = aqi === null ? "—" : String(Math.round(aqi));
-  const status = aqi === null ? "Unavailable" : aqi <= 50 ? "Good" : aqi <= 100 ? "Moderate" : "Elevated";
-  const angle = aqi === null ? 0 : Math.max(15,Math.min(300,aqi <= 50 ? 244 : aqi <= 100 ? 225 : 202));
-  const color = category.tone === "poor" ? "#f4a078" : category.tone === "moderate" ? "#f4cb77" : "#8bea82";
-  const gaugeStyle = {"--air-arc":angle+"deg","--air-accent":color} as CSSProperties;
-  const insights = deriveInsights(data,priorities);
-  const primaryInsight = insights[0];
-  const isSample = data.source === "sample";
+export default function ExposureDashboard({ data, priorities, onExplore, onInsights, onPreferences }: Props) {
+  const air=describeAir(data.aqi);
+  const selected = data.aqi === null ? null : Math.max(0,Math.min(100, data.aqi / 350 * 100));
+  const highlighted=deriveInsights(data,priorities)[0];
+  const localTime=data.updatedAt.includes("T") ? data.updatedAt.split("T")[1]?.slice(0,5) : null;
+  const category=aqiCategory(data.aqi);
+  const indicatorStyle=({"--breathe-indicator":(selected ?? 0)+"%"} as CSSProperties);
+  const count=[data.pm25,data.pm10,data.ozone,data.nitrogenDioxide].filter(x=>x!==null).length;
+  return <div className="breathe-app">
+    <header className="breathe-welcome">
+      <div className="breathe-welcome-copy">
+        <span className="breathe-kicker"><span className="breathe-kicker-dot"/> YOUR CITY, A LITTLE CLEARER</span>
+        <h1>Good to see <em>you here.</em></h1>
+        <p>Let's make sense of the air around you.</p>
+      </div>
+      <div className="breathe-date">
+        <span className="breathe-date-icon"><MapPin size={20} strokeWidth={1.8}/></span>
+        <div><strong>{data.city.name}</strong><span>{data.city.region} · {data.city.country}</span></div>
+      </div>
+    </header>
 
-  return <>
-    <div className="air-showcase">
-      <div className="air-showcase-stage">
-        <div className="air-showcase-art" aria-hidden="true">
-          <ForestOrb variant="forest"/>
-          <ForestOrb variant="smoke"/>
+    <section className={"breathe-hero breathe-hero--"+air.tone} aria-label="Current air-quality overview">
+      <div className="breathe-hero-orbit breathe-hero-orbit--large" aria-hidden="true"/>
+      <div className="breathe-hero-orbit breathe-hero-orbit--small" aria-hidden="true"/>
+      <div className="breathe-hero-top">
+        <div className="breathe-hero-top-eyebrow"><span className="breathe-little-sun"><Sun size={18}/></span><span>TODAY'S AIR</span></div>
+        <span className="breathe-hero-source">{data.source === "sample" ? "FICTIONAL DEMO DATA" : "OPEN-METEO MODEL"}{localTime && data.source !== "sample" ? " · "+localTime : ""}</span>
+      </div>
+      <div className="breathe-hero-body">
+        <div className="breathe-hero-message">
+          <span className={"breathe-status breathe-status--"+air.tone}><span/>{air.label}</span>
+          <h2>{air.headline}</h2>
+          <p>{air.subheading}</p>
+          <button type="button" className="breathe-hero-button" onClick={onInsights}>What does this mean? <ArrowUpRight size={19}/></button>
         </div>
-        <div className="air-floating-map">
-          <div className="air-map-contours" aria-hidden="true"><i/><i/><i/></div>
-          <span className="air-map-marker"><span/></span>
-          <div className="air-map-location"><MapPin size={13}/>{data.city.name}</div>
-          <div className="air-map-strip">
-            <span><CloudSun size={13}/>{Math.round(data.temperature)}°C</span>
-            <span><Droplets size={13}/>{data.humidity}%</span>
-            <span>AQI {value}</span>
-          </div>
-          <small>Illustrative map · not a local sensor</small>
-        </div>
-
-        <div className="air-float-readings">
-          <span>POLLUTANTS <span className="air-float-live">{isSample ? "DEMO" : "MODEL"}</span></span>
-          <div className="air-float-grid">
-            <Pollutant symbol="O₃" name="Ozone" value={data.ozone}/>
-            <Pollutant symbol="NO₂" name="Nitrogen dioxide" value={data.nitrogenDioxide}/>
-            <Pollutant symbol="PM₂.₅" name="Fine particles" value={data.pm25}/>
-            <Pollutant symbol="PM₁₀" name="Particles" value={data.pm10}/>
-          </div>
-        </div>
-
-        <div className="air-phone-frame">
-          <div className="air-phone">
-            <div className="air-phone-system" aria-hidden="true">
-              <span>9:41</span>
-              <span className="air-phone-notch"/>
-              <span className="air-phone-bars"><i/><i/><i/><i/></span>
-            </div>
-            <div className="air-phone-header">
-              <span className="air-phone-avatar" aria-hidden="true">c</span>
-              <strong>civia<span>.</span></strong>
-              <div className="air-phone-header-pace"><span className="air-phone-signal"/>{isSample ? "DEMO" : "LIVE"}</div>
-            </div>
-            <div className="air-phone-tabs" aria-label="Exposure view">
-              <span>Overview</span><strong>Exposure</strong><span>Activity</span><span>Rest</span>
-            </div>
-            <div className="air-phone-monitor">
-              <div className="air-monitor-topline"><span>ENVIRONMENTAL EXPOSURE</span><span>{data.city.name}</span></div>
-              <div className="air-orbit-wrap">
-                <div className="air-ring-trail" style={gaugeStyle}>
-                  <div className="air-ring-track"/>
-                  <div className="air-ring-inner">
-                    <div className="air-ring-caption">US AIR QUALITY INDEX</div>
-                    <strong>{value}</strong>
-                    <span style={{color}}>{status}</span>
-                  </div>
-                  <i className="air-ring-satellite" aria-hidden="true"/>
-                </div>
-              </div>
-              <p className="air-phone-message">{primaryInsight ? primaryInsight.summary : "Explore your local environmental conditions."}</p>
-              <div className="air-phone-meta"><span>{isSample?"FICTIONAL EXAMPLE":"MODEL ESTIMATES"}</span><span>{data.city.region}</span></div>
-            </div>
-
-            <button className="air-phone-aqi-card" type="button" onClick={onExplore}>
-              <div className="air-aqi-card-head"><span>AIR QUALITY</span><ArrowUpRight size={16}/></div>
-              <div className="air-aqi-card-body">
-                <div><strong>{value}</strong><small>{category.label}</small></div>
-                <AQISparkline data={data}/>
-              </div>
-              <span className="air-aqi-card-caption">12-HOUR MODEL FORECAST</span>
-            </button>
-            <div className="air-phone-pollutants-head"><strong>Pollutants</strong><span>µg/m³</span></div>
-            <div className="air-phone-pollutants">
-              <Pollutant symbol="O₃" name="Ozone" value={data.ozone}/>
-              <Pollutant symbol="NO₂" name="Nitrogen dioxide" value={data.nitrogenDioxide}/>
-              <Pollutant symbol="PM₂.₅" name="Fine particles" value={data.pm25}/>
-              <Pollutant symbol="PM₁₀" name="Particles" value={data.pm10}/>
-            </div>
-            <div className="air-phone-actions">
-              <button type="button" onClick={onInsights}><Sparkles size={16}/> Understand your exposure <ArrowRight size={15}/></button>
-            </div>
-            <div className="air-phone-footnote">Forecast models, not personal exposure measurements. {isSample ? "Sample values." : ""}</div>
+        <div className="breathe-aqi-dial" aria-label={"US Air Quality Index: "+(data.aqi === null?"unavailable":Math.round(data.aqi)+", "+air.label)}>
+          <div className="breathe-aqi-dial-inner">
+            <span>US AQI</span>
+            <strong>{data.aqi === null ? "—" : Math.round(data.aqi)}</strong>
+            <small>{air.label}</small>
           </div>
         </div>
-
-        <div className="air-activity-float">
-          <span><Leaf size={14}/> PLAN OUTDOORS</span>
-          <div><strong>{Math.round(data.temperature)}°C</strong><strong>{data.wind.toFixed(0)} <small>km/h wind</small></strong></div>
-          <button type="button" onClick={onExplore}>View conditions <ArrowUpRight size={14}/></button>
-        </div>
       </div>
-
-      <div className="air-showcase-editorial">
-        <div className="air-editorial-eyebrow"><span/> AIR QUALITY / DATA WITH CONTEXT</div>
-        <h1>Track the <em>air</em><br/>you breathe<span className="air-editorial-stop">.</span></h1>
-        <p>CIVIA turns atmospheric data into clarity. Track air-quality forecasts, understand pollution signals and discover the context behind every recommendation.</p>
-        <div className="air-editorial-actions">
-          <button type="button" className="air-cta-main" onClick={onExplore}>Explore your exposure <ArrowUpRight size={17}/></button>
-          <button type="button" className="air-cta-minor" onClick={onInsights}>See the insights <ArrowRight size={17}/></button>
+      <div className="breathe-hero-bottom">
+        <div className="breathe-scale-label"><span>AIR QUALITY INDEX</span><span>LOWER IS GENERALLY BETTER</span></div>
+        <div className="breathe-aqi-scale" style={indicatorStyle} aria-hidden="true">
+          {AQI_LEGEND.map(([range,label,tone])=><span key={tone} className={"breathe-scale-part breathe-scale-part--"+tone} title={range+" "+label}/>)}
+          {selected!==null && <i className="breathe-scale-pointer"/>}
         </div>
-        <div className="air-editorial-rule"/>
-        <div className="air-editorial-facts">
-          <div><span>01</span><strong>Monitor</strong><small>Air + weather conditions</small></div>
-          <div><span>02</span><strong>Understand</strong><small>Transparent data signals</small></div>
-          <div><span>03</span><strong>Decide</strong><small>Guidance you can inspect</small></div>
-        </div>
-        <div className="air-editorial-disclaimer"><ShieldCheck size={17}/><span>Weather and air-quality forecasts by Open-Meteo. {isSample ? "This view uses clearly labeled fictional demo values." : "Forecast estimates—not hyperlocal sensor readings."}</span></div>
-      </div>
-    </div>
-
-    <section className="air-aftershow" aria-label="The environment in context">
-      <div className="air-after-heading">
-        <div><span className="air-overline">YOUR ENVIRONMENT, MADE CLEARER</span><h2>More than a <em>number.</em></h2></div>
-        <p>Look beyond a score. Understand the conditions around you, what may change next, and why a suggestion appears.</p>
-      </div>
-      <div className="air-after-grid">
-        <button className="air-after-card" type="button" onClick={onExplore}>
-          <span className="air-after-number">01 / CONDITIONS <ArrowUpRight size={17}/></span>
-          <div className="air-after-icon"><Wind size={30} strokeWidth={1.3}/></div>
-          <strong>{Math.round(data.temperature)}°<small>C</small></strong>
-          <h3>{data.city.name}, in focus.</h3>
-          <p>Explore temperature, rain probability and air trends across the next hours.</p>
-        </button>
-        <button className="air-after-card" type="button" onClick={onInsights}>
-          <span className="air-after-number">02 / EXPLANATION <ArrowUpRight size={17}/></span>
-          <div className="air-after-icon"><Eye size={30} strokeWidth={1.3}/></div>
-          <strong className="air-after-word">Why?</strong>
-          <h3>Every signal has a story.</h3>
-          <p>Inspect the values and thresholds behind each contextual recommendation.</p>
-        </button>
-        <button className="air-after-card" type="button" onClick={onPreferences}>
-          <span className="air-after-number">03 / PERSONALIZATION <ArrowUpRight size={17}/></span>
-          <div className="air-after-icon"><Leaf size={30} strokeWidth={1.3}/></div>
-          <strong className="air-after-word">Yours.</strong>
-          <h3>Choose what matters.</h3>
-          <p>Prioritize air quality, sun or rain without needing to create an account.</p>
-        </button>
+        <div className="breathe-hero-scale-key"><span>Good</span><span>Moderate</span><span>Unhealthy</span><span>Hazardous</span></div>
       </div>
     </section>
-  </>;
+
+    <div className="breathe-overview-grid">
+      <section className="breathe-card breathe-weather-card">
+        <div className="breathe-card-heading"><div><span className="breathe-overline">YOUR CONDITIONS</span><h2>A quick look <em>outside.</em></h2></div><Sun size={27} strokeWidth={1.6}/></div>
+        <div className="breathe-weather-feature">
+          <div className="breathe-weather-temp">{Math.round(data.temperature)}<span>°</span></div>
+          <div className="breathe-weather-desc"><strong>{weatherLabel(data.weatherCode)}</strong><span>Feels like {Math.round(data.feelsLike)}°C</span></div>
+        </div>
+        <div className="breathe-weather-metrics">
+          <div><Droplets size={19}/><span>Humidity</span><strong>{Math.round(data.humidity)}%</strong></div>
+          <div><Wind size={19}/><span>Wind</span><strong>{Math.round(data.wind)} <small>km/h</small></strong></div>
+          <div><Sun size={19}/><span>UV index</span><strong>{data.uv === null ? "—" : Math.round(data.uv)}</strong></div>
+        </div>
+      </section>
+      <section className="breathe-card breathe-pollutants-card">
+        <div className="breathe-card-heading"><div><span className="breathe-overline">BEYOND THE INDEX</span><h2>What's in <em>the air?</em></h2></div><Leaf size={26} strokeWidth={1.6}/></div>
+        <p className="breathe-card-description">Concentrations estimated by the air-quality model — not sensor readings at your exact street.</p>
+        <div className="breathe-pollutants-grid">
+          <Pollutant short="PM₂.₅" name="Fine particles" value={data.pm25}/>
+          <Pollutant short="PM₁₀" name="Particles" value={data.pm10}/>
+          <Pollutant short="O₃" name="Ozone" value={data.ozone}/>
+          <Pollutant short="NO₂" name="Nitrogen dioxide" value={data.nitrogenDioxide}/>
+        </div>
+        <div className="breathe-pollutants-footer"><span>{count} of 4 readings available</span><span className={"breathe-plain-status breathe-plain-status--"+air.tone}>{category.label}</span></div>
+      </section>
+    </div>
+
+    <div className="breathe-overview-grid breathe-overview-grid--bottom">
+      <HourlyTrend data={data} onExplore={onExplore}/>
+      <section className="breathe-insight-card">
+        <div className="breathe-insight-bloom" aria-hidden="true"><i/><i/><i/></div>
+        <div className="breathe-insight-head"><Sparkles size={20}/><span>A THOUGHT FOR YOUR DAY</span></div>
+        <h2>{highlighted ? highlighted.title : "Small steps, clearer choices."}</h2>
+        <p>{highlighted ? highlighted.summary : "Explore the signals you care about and see where they lead."}</p>
+        <button type="button" onClick={onInsights}>Understand the why <ArrowUpRight size={20}/></button>
+      </section>
+    </div>
+
+    <section className="breathe-journey" aria-label="Explore CIVIA">
+      <div className="breathe-journey-heading"><span className="breathe-overline">YOU'RE IN CONTROL</span><h2>Make it work <em>for you.</em></h2></div>
+      <div className="breathe-journey-items">
+        <button type="button" onClick={onExplore}><span className="breathe-journey-icon"><Wind size={23}/></span><span><strong>Explore the forecast</strong><small>See what could change next</small></span><ArrowUpRight size={21}/></button>
+        <button type="button" onClick={onInsights}><span className="breathe-journey-icon"><Heart size={23}/></span><span><strong>Understand an insight</strong><small>Review the factors behind it</small></span><ArrowUpRight size={21}/></button>
+        <button type="button" onClick={onPreferences}><span className="breathe-journey-icon"><SlidersHorizontal size={23}/></span><span><strong>Choose your priorities</strong><small>Make the experience yours</small></span><ArrowUpRight size={21}/></button>
+      </div>
+    </section>
+    <div className="breathe-trust"><CheckCircle2 size={19}/><span>Transparent by design · All air-quality values are model estimates, not personal exposure measurements. CIVIA is a design concept, not a health-alert service.</span><button type="button" onClick={onInsights}>About our guidance <ArrowRight size={17}/></button></div>
+  </div>;
 }
