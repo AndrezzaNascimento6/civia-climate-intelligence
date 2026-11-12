@@ -99,11 +99,11 @@ export default function ExposureDashboard({
 
   return <>
     <div className="air-showcase">
-      <div className="air-showcase-art" aria-hidden="true">
-        <ForestOrb variant="forest"/>
-        <ForestOrb variant="smoke"/>
-      </div>
       <div className="air-showcase-stage">
+        <div className="air-showcase-art" aria-hidden="true">
+          <ForestOrb variant="forest"/>
+          <ForestOrb variant="smoke"/>
+        </div>
         <div className="air-floating-map">
           <div className="air-map-contours" aria-hidden="true"><i/><i/><i/></div>
           <span className="air-map-marker"><span/></span>
