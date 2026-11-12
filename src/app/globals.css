@@ -499,3 +499,5 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
   html { scroll-behavior: auto; }
   *, *:before, *:after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+.footer-links{display:flex;align-items:center;gap:20px;flex-wrap:wrap}.footer-links a{display:inline-flex;align-items:center;gap:6px}.footer-links a:hover{text-decoration:underline}

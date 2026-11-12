@@ -136,7 +136,7 @@ function MiniFooter({ snapshot }: { snapshot: ClimateSnapshot | null }) {
   return <footer className="main-footer">
     <span>© 2026 CIVIA · A PRODUCT DESIGN CONCEPT</span>
     <span>{snapshot?.source === "sample" ? "SAMPLE DATA — NOT LIVE" : "WEATHER & AIR QUALITY BY OPEN-METEO"}</span>
-    <a href="https://open-meteo.com/" target="_blank" rel="noreferrer">Data source <ExternalLink size={12} aria-hidden="true"/></a>
+    <span className="footer-links"><a href="/process">Design decisions <ArrowUpRight size={12} aria-hidden="true"/></a><a href="https://open-meteo.com/" target="_blank" rel="noreferrer">Data source <ExternalLink size={12} aria-hidden="true"/></a></span>
   </footer>;
 }
 
