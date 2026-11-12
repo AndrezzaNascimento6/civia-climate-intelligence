@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import "./air-design.css";
 
 export const metadata: Metadata = {
   title: "CIVIA — Your city, made understandable",
